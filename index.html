@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance-Based Objectives Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ebony:     #3a1e50;
+      --ebony-dk:  #1e0e28;
+      --grey:      #6b6470;
+      --grey-dk:   #4e4854;
+      --lilac:     #c4a8d4;
+      --lilac-dk:  #7a5a8a;
+      --alabaster: #d8c8e8;
+      --platinum:  #ede6f5;
+      --warm-white: #faf8fd;
+      --accent:    #a06428;
+      --accent-lt: #faf0e0;
+      --cream:     #f5f0fc;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+      background: var(--platinum);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────── */
+    #header {
+      background: var(--ebony-dk);
+      color: white;
+      padding: 13px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-bottom: 2px solid rgba(255,255,255,0.06);
+    }
+    #header h1   { font-size: 1.02rem; font-weight: 700; letter-spacing: -0.01em; }
+    #header .sub  { font-size: 0.68rem; opacity: 0.52; margin-top: 3px; line-height: 1.4; }
+    #header .hint { font-size: 0.63rem; opacity: 0.4; }
+    #header .srgd {
+      font-size: 0.68rem;
+      margin-top: 5px;
+      color: var(--lilac);
+      line-height: 1.45;
+      opacity: 0.9;
+    }
+    #header .srgd strong { font-weight: 700; opacity: 1; color: var(--lilac); }
+
+    /* ── Body ────────────────────────────────── */
+    #body { display: flex; flex: 1; overflow: hidden; }
+
+    #grid-scroll {
+      flex: 1;
+      overflow: auto;
+      padding: 16px 16px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /*
+      Main grid layout
+      col 0  = knowledge-domain row labels  (left / vertical axis)
+      col 1–6 = 6 cognitive-process columns
+    */
+    #main-grid {
+      display: grid;
+      grid-template-columns: 148px repeat(6, 1fr);
+      gap: 5px;
+      min-width: 820px;
+    }
+
+    /* ── Social / Change Dimensions (top header row) ── */
+    .corner { /* empty top-left corner */ }
+
+    .social-cell {
+      background: var(--lilac);
+      border: 1px solid rgba(138,117,144,0.45);
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .social-cell .s-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #1e0e28;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+    .social-cell .s-desc {
+      font-size: 0.65rem;
+      color: #3a2048;
+      margin-top: 4px;
+      line-height: 1.35;
+      opacity: 0.88;
+    }
+
+    /* ── Knowledge Domain row labels (left column) ── */
+    .know-label {
+      color: var(--platinum);
+      border-radius: 8px;
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: right;
+    }
+    .know-label .k-icon { display: block; margin-bottom: 6px; opacity: 0.85; margin-left: auto; font-size: 1.1rem; line-height: 1; }
+    .know-label .k-name { font-size: 0.8rem; font-weight: 700; letter-spacing: -0.01em; }
+    .know-label .k-desc { font-size: 0.68rem; opacity: 0.85; margin-top: 4px; line-height: 1.35; }
+
+    /* ── Corner + SRGD title bar ── */
+    .corner {
+      /* spacer — no content */
+    }
+    .kd-corner {
+      /* empty top-left cell */
+    }
+    /* "The Knowledge Domain" title — sits in the social-row left cell */
+    .kd-domain-title {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 6px;
+    }
+    .kd-domain-text {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ebony-dk);
+      text-align: center;
+      line-height: 1.35;
+      opacity: 0.8;
+    }
+    /* "↓ Abstract" — pinned to bottom of domain-title cell, sits just above metacognitive block */
+    .kd-scale-abstract {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ebony-dk);
+      opacity: 0.65;
+      text-align: center;
+    }
+    /* "↑ Concrete" in the cog-spacer cell, pinned to top */
+    .kd-concrete {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ebony-dk);
+      opacity: 0.65;
+      padding-top: 4px;
+    }
+    .srgd-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 12px;
+      margin-bottom: 1px;
+    }
+    .srgd-bar-name {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--lilac-dk);
+      text-align: center;
+      flex: 1;
+    }
+    .srgd-bar-pole {
+      font-size: 0.62rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey);
+      white-space: nowrap;
+      opacity: 0.85;
+    }
+
+    .kl-metacognitive { background: #1e0e28; color: #f0e8f8; }
+    .kl-procedural    { background: #3a1e50; color: #e8d8f8; }
+    .kl-conceptual    { background: #6a4878; color: #f0e8f8; }
+    .kl-factual       { background: #9a80aa; color: #f8f4fd; }
+
+    /* ── Grid cells ── */
+    .cell {
+      border-radius: 8px;
+      padding: 10px 9px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 88px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      border: 2px solid rgba(255,255,255,0.1);
+      position: relative;
+    }
+    .cell:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+      z-index: 5;
+      border-color: rgba(255,255,255,0.28);
+    }
+    .cell.active {
+      outline: 2.5px solid white;
+      outline-offset: 2px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+    }
+    .cell .c-comp {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.9;
+    }
+    .cell .c-dot {
+      font-size: 0.68rem;
+      text-align: right;
+      opacity: 0.5;
+    }
+    .cell.no-content { opacity: 0.4; }
+
+    /* Verb chips on cell face */
+    .c-verbs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+    .cv {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+    .cr-metacognitive .cv { background: rgba(255,255,255,0.18); color: #f0e8f8; }
+    .cr-procedural .cv    { background: rgba(255,255,255,0.18); color: #e8d8f8; }
+    .cr-conceptual .cv    { background: rgba(30,14,40,0.15);   color: #1e0e28; }
+    .cr-factual .cv       { background: rgba(58,30,80,0.1);    color: #1e0e28; }
+
+    /* Cell background by knowledge row */
+    .cr-metacognitive { background: #1e0e28; color: #f0e8f8; }
+    .cr-procedural    { background: #3a1e50; color: #e8d8f8; }
+    .cr-conceptual    { background: #c4a8d4; color: #1e0e28; }
+    .cr-factual       { background: #f2edf8; color: #1e0e28; }
+
+    /* ── Cognitive Process bottom labels ── */
+    .cog-spacer { /* empty */ }
+    .cog-label {
+      background: var(--cream);
+      border: 1px solid var(--alabaster);
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    .cog-label .c-name { font-size: 0.76rem; font-weight: 700; color: var(--ebony-dk); }
+    .cog-label .c-desc { font-size: 0.68rem; color: var(--grey-dk); margin-top: 4px; line-height: 1.35; }
+
+    /* ── Axis labels ── */
+    #axis-labels {
+      display: grid;
+      grid-template-columns: 148px 1fr;
+      gap: 4px;
+      margin-top: 5px;
+      min-width: 820px;
+    }
+    .ax-know {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      padding-right: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ebony);
+      opacity: 0.8;
+    }
+    .ax-cog {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--grey-dk);
+    }
+
+    /* ── Detail panel ── */
+    #detail-panel {
+      width: 0;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      background: var(--warm-white);
+      border-left: 2px solid rgba(69,80,59,0.18);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.06);
+    }
+    #detail-panel.open { width: 364px; }
+
+    #panel-inner { padding: 20px 18px; overflow-y: auto; flex: 1; }
+
+    .ph { position: relative; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1.5px solid var(--alabaster); }
+    .ph-meta { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 5px; }
+    .ph-title { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.15rem; font-weight: 400; color: var(--ebony-dk); padding-right: 28px; line-height: 1.25; }
+    .ph-close {
+      position: absolute; top: 0; right: 0;
+      background: none; border: none; cursor: pointer;
+      color: var(--grey); font-size: 1rem;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, color 0.12s;
+    }
+    .ph-close:hover { background: var(--platinum); color: var(--ebony-dk); }
+
+    .ph-badge {
+      display: inline-block;
+      background: rgba(176,152,164,0.2);
+      color: var(--lilac-dk);
+      border: 1px solid rgba(138,117,144,0.3);
+      padding: 3px 11px;
+      border-radius: 20px;
+      font-size: 0.66rem;
+      font-weight: 600;
+      margin-top: 7px;
+      letter-spacing: 0.01em;
+    }
+    .ph-sd {
+      font-size: 0.74rem;
+      color: var(--grey);
+      margin-top: 6px;
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .ps { margin-bottom: 18px; }
+    .ps h4 {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--grey);
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--alabaster);
+    }
+
+    .verb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .verb-chip {
+      background: var(--cream);
+      color: var(--ebony-dk);
+      border: 1px solid var(--alabaster);
+      border-radius: 20px;
+      padding: 4px 11px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .ex-item {
+      background: var(--cream);
+      border-left: 3px solid var(--ebony);
+      padding: 8px 12px;
+      border-radius: 0 7px 7px 0;
+      font-size: 0.76rem;
+      color: #2a2a2a;
+      margin-bottom: 6px;
+      line-height: 1.55;
+    }
+    .st-item {
+      background: #faf6fb;
+      border-left: 3px solid var(--lilac-dk);
+      padding: 8px 12px;
+      border-radius: 0 7px 7px 0;
+      font-size: 0.76rem;
+      color: #2a2a2a;
+      margin-bottom: 6px;
+      line-height: 1.55;
+    }
+    .pending {
+      background: var(--platinum);
+      border: 1.5px dashed var(--alabaster);
+      border-radius: 5px;
+      padding: 9px;
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--grey);
+    }
+
+    /* ── Guide overlay ── */
+    #guide-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(22,20,18,0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    #guide-overlay.hidden { display: none; }
+
+    #guide-card {
+      background: var(--warm-white);
+      border-radius: 16px;
+      padding: 34px 36px 26px;
+      max-width: 660px;
+      width: 92%;
+      box-shadow: 0 28px 72px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid rgba(255,255,255,0.9);
+    }
+    #guide-card h2 {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    /* Progress bar */
+    .gc-prog {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 22px;
+    }
+    .gc-pip {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      font-size: 0.64rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      background: var(--alabaster); color: var(--grey);
+      transition: background 0.2s;
+    }
+    .gc-pip.active { background: var(--ebony); color: white; box-shadow: 0 2px 8px rgba(46,54,40,0.3); }
+    .gc-pip.done   { background: var(--accent); color: white; font-size: 0.72rem; }
+    .gc-line { flex: 1; height: 2px; background: var(--alabaster); border-radius: 2px; }
+    .gc-line.done { background: var(--accent); }
+
+    .gc-q   { font-family: 'DM Serif Display', Georgia, serif; font-size: 1.28rem; font-weight: 400; color: var(--ebony-dk); line-height: 1.3; margin-bottom: 7px; }
+    .gc-sub { font-size: 0.74rem; color: var(--grey); margin-bottom: 18px; line-height: 1.5; }
+
+    /* Option grids */
+    .gc-opts     { display: grid; gap: 7px; margin-bottom: 14px; }
+    .gc-opts.g3  { grid-template-columns: repeat(3, 1fr); }
+    .gc-opts.g2  { grid-template-columns: repeat(2, 1fr); }
+
+    .gc-opt {
+      background: var(--cream);
+      border: 1.5px solid var(--alabaster);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+    .gc-opt:hover {
+      border-color: var(--ebony);
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+    .gc-opt-label { font-size: 0.8rem; font-weight: 700; color: var(--ebony-dk); margin-bottom: 4px; }
+    .gc-opt-desc  { font-size: 0.72rem; color: var(--grey); line-height: 1.4; }
+
+    /* Footer actions */
+    .gc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+    .gc-ghost  {
+      background: none; border: none; font-size: 0.74rem;
+      color: var(--grey); cursor: pointer; text-decoration: underline; padding: 2px 0;
+    }
+    .gc-ghost:hover { color: var(--ebony); }
+
+    /* Context trail */
+    .gc-trail {
+      background: var(--accent-lt);
+      border-radius: 9px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      border-left: 3px solid var(--accent);
+    }
+    .gc-trail-item {
+      font-size: 0.74rem;
+      color: var(--grey-dk);
+      line-height: 1.45;
+    }
+    .gc-trail-item span { font-weight: 700; color: var(--accent); }
+
+    /* Textarea */
+    .gc-textarea {
+      width: 100%;
+      border: 1.5px solid var(--alabaster);
+      border-radius: 9px;
+      padding: 11px 14px;
+      font-size: 0.84rem;
+      font-family: inherit;
+      color: var(--ebony-dk);
+      resize: vertical;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      line-height: 1.55;
+      background: var(--cream);
+    }
+    .gc-textarea:focus {
+      border-color: var(--ebony);
+      box-shadow: 0 0 0 3px rgba(69,80,59,0.1);
+      background: white;
+    }
+
+    /* Step context label */
+    .gc-context-step {
+      font-size: 0.74rem;
+      color: var(--grey);
+      background: var(--platinum);
+      padding: 6px 11px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .gc-context-step em { color: var(--ebony-dk); font-style: normal; font-weight: 600; }
+
+    /* Steps builder */
+    #steps-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 10px; }
+    .gc-step-row { display: flex; align-items: center; gap: 8px; }
+    .gc-step-num {
+      width: 22px; height: 22px;
+      background: var(--ebony);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .gc-step-input { flex: 1; margin-bottom: 0; }
+    .gc-step-del {
+      background: none; border: none;
+      color: var(--grey); font-size: 1rem;
+      cursor: pointer; padding: 2px 6px;
+      border-radius: 4px; line-height: 1;
+    }
+    .gc-step-del:hover { background: var(--platinum); color: #c0392b; }
+    .gc-add-step {
+      background: none;
+      border: 1.5px dashed var(--alabaster);
+      border-radius: 7px;
+      padding: 7px 12px;
+      font-size: 0.7rem;
+      color: var(--grey);
+      cursor: pointer;
+      width: 100%;
+      transition: border-color 0.12s, color 0.12s;
+      margin-bottom: 4px;
+    }
+    .gc-add-step:hover { border-color: var(--ebony); color: var(--ebony); }
+
+    /* Single-column option grid */
+    .gc-opts.g1 { grid-template-columns: 1fr; }
+
+    /* Verb input */
+    .gc-input {
+      flex: 1;
+      border: 1.5px solid var(--alabaster);
+      border-radius: 9px;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      font-family: inherit;
+      color: var(--ebony-dk);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--cream);
+    }
+    .gc-input:focus {
+      border-color: var(--ebony);
+      box-shadow: 0 0 0 3px rgba(69,80,59,0.1);
+      background: white;
+    }
+    .gc-submit {
+      background: var(--ebony);
+      color: white;
+      border: none;
+      border-radius: 9px;
+      padding: 10px 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+    }
+    .gc-submit:hover {
+      background: var(--ebony-dk);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(46,54,40,0.25);
+    }
+
+    /* Result badge */
+    .gc-result-badge {
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .grb-cog  { font-size: 1.1rem; font-weight: 700; }
+    .grb-sep  { font-size: 1rem; opacity: 0.5; }
+    .grb-know { font-size: 1.1rem; font-weight: 700; }
+    .grb-comp {
+      margin-left: auto;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.7;
+      border: 1px solid currentColor;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    /* Why explanation */
+    .gc-why-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .gc-why-text {
+      font-size: 0.8rem;
+      color: #2a2420;
+      line-height: 1.65;
+      margin-bottom: 20px;
+      padding: 12px 14px;
+      background: var(--cream);
+      border-radius: 8px;
+      border-left: 3px solid var(--ebony);
+    }
+    .gc-result-actions { display: flex; }
+
+    /* Pulse highlight after guide lands on a cell */
+    @keyframes guide-pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(160,100,40,0.7); }
+      50%  { box-shadow: 0 0 0 10px rgba(160,100,40,0); }
+      100% { box-shadow: 0 0 0 0   rgba(160,100,40,0); }
+    }
+    .cell.guide-highlight { animation: guide-pulse 0.55s ease 3; }
+
+    /* Header guide button */
+    .guide-btn {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      white-space: nowrap;
+      font-family: inherit;
+      letter-spacing: 0.01em;
+    }
+    .guide-btn:hover {
+      background: #9e4b2c;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(184,92,58,0.4);
+    }
+
+    /* ── Legend ── */
+    #legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 18px;
+      background: var(--warm-white);
+      border-top: 1px solid var(--alabaster);
+      font-size: 0.72rem;
+      color: var(--grey);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .li { display: flex; align-items: center; gap: 5px; }
+    .ld { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>Performance-Based Objectives Builder</h1>
+    <div class="sub">Knowledge Domain &times; Cognitive Process &times; Self-Relational Growth Dimension</div>
+    <div class="srgd"><strong>Self-Relational Growth Dimension</strong> &mdash; how learners grow from self-knowledge and regulation through to social perception, effectiveness, and the capacity for meaningful change</div>
+  </div>
+  <button class="guide-btn" onclick="showGuide()">Start here &rarr;</button>
+</div>
+
+<!-- Guide overlay -->
+<div id="guide-overlay" class="hidden">
+  <div id="guide-card"><!-- rendered by JS --></div>
+</div>
+
+<div id="body">
+  <div id="grid-scroll">
+    <div id="main-grid"><!-- JS renders here --></div>
+
+    <div id="axis-labels">
+
+      <div class="ax-cog" style="grid-column: 1 / -1; padding-left: 152px;">
+        <span>&#8592; Lower Order Thinking Skills</span>
+        <span style="opacity:0.6;">The Cognitive Process Dimension</span>
+        <span>Higher Order Thinking Skills &#8594;</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="detail-panel">
+    <div id="panel-inner"></div>
+  </div>
+</div>
+
+<div id="legend">
+  <span style="font-weight:700;color:var(--ebony-dk);">Knowledge Domain (rows):</span>
+  <div class="li"><div class="ld" style="background:#1e0e28;"></div>Metacognitive</div>
+  <div class="li"><div class="ld" style="background:#3a1e50;"></div>Procedural</div>
+  <div class="li"><div class="ld" style="background:#c4a8d4;border:1px solid #a888b8;"></div>Conceptual</div>
+  <div class="li"><div class="ld" style="background:#f2edf8;border:1px solid #c8b8d8;"></div>Factual</div>
+  <span style="color:var(--alabaster);">|</span>
+  <div class="li"><span style="opacity:0.45;">&#8901;&#8901;&#8901;</span>&nbsp;Content pending</div>
+  <div class="li"><span>&#10003;</span>&nbsp;Content available</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+
+/*
+  Grid orientation (matches original):
+  - ROWS (top→bottom):  Knowledge domain — Metacognitive → Procedural → Conceptual → Factual
+                        (Abstract Knowledge at top, Concrete Knowledge at bottom)
+  - COLUMNS (left→right): Cognitive process — Remember → Understand → Apply → Analyze → Evaluate → Create
+                           (Lower Order at left, Higher Order at right)
+  - TOP HEADER (1-to-1 with columns): Social/Change Dimensions
+                                      Self Regard → Self Awareness → Self Control →
+                                      Social Perception → Social Effectiveness → Social Design
+*/
+
+const COG = [
+  {
+    id: 'remember',
+    label: 'Remember',
+    desc: 'Retrieve relevant knowledge from long-term memory.',
+    socialLabel: 'Self Regard',
+    socialDesc:  'Consideration of oneself or one\'s own interests.',
+  },
+  {
+    id: 'understand',
+    label: 'Understand',
+    desc: 'Construct meaning from instructional messages, including oral, written and graphic communication.',
+    socialLabel: 'Self Awareness',
+    socialDesc:  'What one observes; an awareness of one\'s own personality or individuality.',
+  },
+  {
+    id: 'apply',
+    label: 'Apply',
+    desc: 'Carry out or use a procedure in a given situation.',
+    socialLabel: 'Self Control',
+    socialDesc:  'Restraint exercised over one\'s own impulses, emotions, or desires.',
+  },
+  {
+    id: 'analyze',
+    label: 'Analyze',
+    desc: 'Break material into constituent parts and determine how parts relate to one another and to an overall structure or purpose.',
+    socialLabel: 'Social Perception',
+    socialDesc:  'How one forms impressions of and makes inferences about other people.',
+  },
+  {
+    id: 'evaluate',
+    label: 'Evaluate',
+    desc: 'Make judgments based on criteria and standards.',
+    socialLabel: 'Social Effectiveness',
+    socialDesc:  'Ability to identify, comprehend, and attain effective social networks.',
+  },
+  {
+    id: 'create',
+    label: 'Create',
+    desc: 'Put elements together to form a coherent whole; reorganize into a new pattern or structure.',
+    socialLabel: 'Social Design',
+    socialDesc:  'How one contributes to improving human well-being and livelihood.',
+  },
+];
+
+const KNOW = [
+  {
+    id: 'metacognitive',
+    label: 'Metacognition',
+    desc: 'Knowledge of cognition in general as well as awareness and knowledge of one\'s own cognition.',
+    cellClass:  'cr-metacognitive',
+    labelClass: 'kl-metacognitive',
+  },
+  {
+    id: 'procedural',
+    label: 'Procedural',
+    desc: 'How to do something, methods of inquiry, and criteria for using skills, algorithms, techniques, and methods.',
+    cellClass:  'cr-procedural',
+    labelClass: 'kl-procedural',
+  },
+  {
+    id: 'conceptual',
+    label: 'Conceptual',
+    desc: 'The interrelationships among the basic elements within a larger structure that enable them to function together.',
+    cellClass:  'cr-conceptual',
+    labelClass: 'kl-conceptual',
+  },
+  {
+    id: 'factual',
+    label: 'Factual',
+    desc: 'The basic elements a student must know to be acquainted with a discipline or solve problems in it.',
+    cellClass:  'cr-factual',
+    labelClass: 'kl-factual',
+  },
+];
+
+// Keyed "cogId-knowId"
+// Verbs sourced from Bloom's Taxonomy Teacher Planning Kit and distributed
+// across knowledge rows based on verb definitions:
+//   Factual     = applied to specific facts, data, terminology
+//   Conceptual  = applied to ideas, relationships, principles, categories
+//   Procedural  = applied to processes, methods, skills, techniques
+//   Metacognitive = applied to awareness/regulation of one's own thinking
+//
+// Image columns map to revised taxonomy as:
+//   Knowledge→Remember, Comprehension→Understand, Application→Apply,
+//   Analysis→Analyze, Evaluation→Evaluate, Synthesis→Create
+const CELLS = {
+
+  /* ── REMEMBER ── */
+  'remember-factual': {
+    competency: 'Optimism',
+    verbs: ['list','name','define','label','identify','state','select','copy','find','memorise','spell','quote','read','duplicate','tell'],
+    objectives: [
+      'List the key terms and definitions relevant to a new topic or domain.',
+      'Name the required elements of a standard process or checklist.',
+      'Identify the core facts needed to begin a task or procedure.',
+      'Given a reference sheet on day one of onboarding, the learner will label each item on the checklist with its correct term with no more than two errors.',
+    ],
+    strategies: [
+      'Have learners complete a pre-activity retrieval exercise before introducing new content — ask them to list everything they already know about a topic. Framing this as "what you already bring" builds a positive orientation toward learning that supports optimism about growth.',
+      'Ask participants to read through a glossary or fact sheet and then close it and reproduce as many terms as they can from memory. Immediately reinforce what they got right before addressing gaps.',
+      'Flashcard or matching activity: this is a classic retrieval practice format that directly targets the recognizing and recalling sub-processes of the Remember level, reinforcing discrete factual knowledge through low-stakes repetition.',
+      'Labeling diagram exercise: learners are given a blank visual (workflow, process map, or diagram) and must fill in factual labels from memory — ideal for factual knowledge because it makes discrete elements visible and testable.',
+    ],
+  },
+  'remember-conceptual': {
+    competency: 'Self-Respect',
+    verbs: ['recognise','relate','classify','match','observe','why','how'],
+    objectives: [
+      'Recognise the major categories or classifications within a given framework.',
+      'Relate each principle in a model to its corresponding definition.',
+      'Match each concept to the broader category it belongs to.',
+      'Given a set of unlabeled concept cards, the learner will classify each concept into its correct category with complete accuracy.',
+    ],
+    strategies: [
+      'Have learners observe a completed concept map or framework diagram before any instruction begins, then ask them to name what they see without interpretation. This grounds them in the shape of the whole before the parts — a form of self-respectful orientation that says "you already notice patterns."',
+      'Ask participants to sort a set of term cards into groups based on what they already recall. Encourage them to trust their instinct before checking the answer — this builds confidence in their existing conceptual memory.',
+      'Category sorting activity: learners receive a shuffled set of concepts and assign each to a named classification. This targets the recognizing sub-process at the conceptual level, requiring recall of how ideas relate rather than just what they mean in isolation.',
+      'Concept-to-definition matching exercise: pairs of learners match frameworks, models, or categories to their plain-language descriptions — reinforcing the relational structure of conceptual knowledge through low-stakes peer interaction.',
+    ],
+  },
+  'remember-procedural': {
+    competency: 'Awareness',
+    verbs: ['trace','reproduce','repeat','show','record','retell'],
+    objectives: [
+      'Trace the sequence of steps in a standard operating procedure from beginning to end.',
+      'Reproduce a process from memory after observing a demonstration.',
+      'Repeat the correct order of actions required to complete a routine task.',
+      'Given a completed process walkthrough, the learner will record the steps of the procedure in the correct sequence without referencing the original.',
+    ],
+    strategies: [
+      'Have learners watch a demonstration of a procedure, then immediately retell the steps in their own words without looking at notes. This anchors procedural memory in observation and verbal rehearsal before practice begins.',
+      'Ask participants to trace through a printed workflow or process map step by step, narrating what happens at each node. Voicing the steps aloud reinforces the sequential structure of procedural knowledge.',
+      'Step-sequencing card sort: learners receive shuffled cards representing each step of a procedure and must place them in the correct order — directly targeting retrieval of procedural sequences and the "when comes after what" logic of process recall.',
+      'Shadow observation with retell: a learner observes a peer or facilitator perform a procedure, then immediately reproduces the steps verbally or in writing — a low-stakes recall format that mirrors how procedural knowledge is encoded through watching and repeating.',
+    ],
+  },
+  'remember-metacognitive': {
+    competency: 'Self-Monitoring',
+    verbs: ['recall','remember','locate'],
+    objectives: [
+      'Recall the learning strategies that have worked best for them in similar tasks.',
+      'Remember the conditions under which they perform most effectively as a learner.',
+      'Locate gaps in their prior knowledge before beginning a new learning sequence.',
+      'Given a brief self-inventory prompt at the start of a module, the learner will recall at least two personal strategies they have used successfully in past learning situations.',
+    ],
+    strategies: [
+      'Open each learning session with a 2-minute silent reflection prompt: "What do you already know about this topic? What have you done before that helped you learn something like this?" This activates metacognitive memory before instruction begins, so learners arrive with self-awareness rather than passivity.',
+      'Ask learners to locate and annotate a personal learning journal or prior self-assessment they completed in an earlier module. Reconnecting with their own recorded thinking builds the habit of self-referencing as a knowledge resource.',
+      'Prior knowledge self-inventory: learners complete a simple checklist — "I can recall…", "I\'m not sure about…", "I\'ve done this before when…" — targeting the metacognitive sub-process of accessing strategic self-knowledge before new content is introduced.',
+      'Think-aloud recall pair: learners partner up and each spend 90 seconds talking through what they remember about their own approach to a previous task. Verbalizing metacognitive memory makes implicit self-knowledge explicit and retrievable.',
+    ],
+  },
+
+  /* ── UNDERSTAND ── */
+  'understand-factual': {
+    competency: 'Openness',
+    verbs: ['describe','summarise','paraphrase','report','translate','restate','classify'],
+    objectives: [
+      'Describe the key features of a policy, product, or process in plain language.',
+      'Summarise the main points of a briefing or document in a few sentences.',
+      'Paraphrase a technical definition so that a non-expert could understand it.',
+      'Given a one-page fact sheet on a new procedure, the learner will restate the three most important requirements accurately in their own words.',
+    ],
+    strategies: [
+      'Have learners read a short text or watch a brief video, then immediately write a two-sentence summary without looking back at the source. Challenge them to translate any jargon into plain language — this develops the interpreting sub-process and signals openness to making knowledge accessible to others.',
+      'Ask participants to paraphrase a rule, policy, or definition to a partner who then checks it for accuracy. The act of translating into one\'s own words — and receiving feedback — reinforces comprehension while modeling openness to correction.',
+      'Teach-back in pairs: one learner explains a fact or concept to a peer using only their own words; the peer asks one clarifying question. This targets the summarizing and interpreting sub-processes at the factual level while building communicative generosity.',
+      'Caption-writing activity: learners are shown an image, diagram, or short data display and must write a one-sentence description of what it shows. This exercises the "describing" and "reporting" verbs at the factual level and builds the habit of translating observable information into clear language.',
+    ],
+  },
+  'understand-conceptual': {
+    competency: 'Self-Knowledge',
+    verbs: ['explain','compare','contrast','interpret','discuss','illustrate','generalise','give examples','extend'],
+    objectives: [
+      'Explain the relationship between two principles or theories in a given domain.',
+      'Compare and contrast two competing models or frameworks, noting key similarities and differences.',
+      'Illustrate how a broad concept applies to a specific example from a familiar context.',
+      'Given two related conceptual frameworks, the learner will interpret how each one addresses the same problem differently with at least three distinct points of comparison.',
+    ],
+    strategies: [
+      'Have learners discuss a concept in small groups using the prompt: "Where have you seen this principle at work in your own experience?" Connecting abstract concepts to personal history builds self-knowledge and deepens conceptual comprehension beyond surface-level recall.',
+      'Ask participants to generate their own example of a concept, then extend it — "What would change if one element shifted?" This exercises the exemplifying and extending sub-processes and invites learners to interrogate their own understanding.',
+      'Compare-and-contrast graphic organizer: learners complete a Venn diagram or T-chart to map similarities and differences between two concepts. This targets the comparing sub-process directly and externalizes conceptual relationships that might otherwise stay implicit.',
+      'Concept explanation video or voice memo: learners record a 60-second explanation of a concept as if teaching it to a colleague. The act of producing an explanation for an audience crystallizes what they do and do not yet understand — a natural vehicle for self-knowledge.',
+    ],
+  },
+  'understand-procedural': {
+    competency: 'Integrity',
+    verbs: ['demonstrate','outline','indicate','show','express'],
+    objectives: [
+      'Demonstrate an understanding of why each step in a procedure exists and what it accomplishes.',
+      'Outline the logic and sequence of a method without performing it in full.',
+      'Indicate where in a process a specific action should occur and why it matters at that point.',
+      'Given a process flowchart with one step missing, the learner will show where the missing step belongs and express in one sentence why its placement is critical to the process.',
+    ],
+    strategies: [
+      'Have learners walk through a procedure and, at each step, explain the "why" behind it — not just what to do, but what would happen if this step were skipped. Connecting procedure to purpose builds integrity in practice: doing the right thing because you understand its meaning, not just its sequence.',
+      'Ask participants to outline a procedure from memory before seeing the reference guide, then compare their outline to the actual steps. Discussing discrepancies builds honest self-assessment and procedural comprehension simultaneously.',
+      'Annotated process walkthrough: learners observe or read a demonstration and must write one sentence next to each step explaining its purpose. This targets the explaining sub-process at the procedural level, requiring comprehension rather than mere recognition of sequence.',
+      '"What breaks if I skip this?" discussion protocol: small groups are given a procedure with one step removed and must articulate what goes wrong downstream. This exercises the inferring and explaining sub-processes while reinforcing why procedural knowledge must be understood — not just memorized.',
+    ],
+  },
+  'understand-metacognitive': {
+    competency: 'Reflection',
+    verbs: ['predict','estimate','infer','review','rephrase'],
+    objectives: [
+      'Predict how a change in approach or strategy would affect their learning outcome.',
+      'Infer which parts of an upcoming task are likely to be most challenging based on prior experience.',
+      'Review their own performance on a prior task and identify what they now understand differently.',
+      'Given a description of a learning scenario they have not yet attempted, the learner will estimate their confidence level in each phase and infer two areas where they will likely need additional support.',
+    ],
+    strategies: [
+      'Have learners complete a pre-task confidence rating — asking them to estimate how well they expect to perform before they begin. After completing the task, ask them to review their prediction and rephrase what they now understand about their own readiness.',
+      'Ask participants to write a brief "learning forecast" at the start of a module: "I predict this will be easy/hard because…" Revisit these predictions at the end and discuss what was accurate and what surprised them.',
+      'Exit ticket with inference prompt: at the end of a session, learners respond to "What do you now understand about how you learn this type of material?" This targets metacognitive comprehension directly and takes less than five minutes to facilitate.',
+      'Learning review journal: learners keep a running log where they rephrase what they\'ve learned each session in their own words, noting not just what they know but how they came to understand it. The ongoing review builds metacognitive fluency over time.',
+    ],
+  },
+
+  /* ── APPLY ── */
+  'apply-factual': {
+    competency: 'Impulse Control',
+    verbs: ['use','employ','select','choose','show','dramatise'],
+    objectives: [
+      'Use the correct term, code, or reference at the appropriate point in a task.',
+      'Select the right factual information from a set of options to resolve a practical problem.',
+      'Choose the appropriate rule or guideline to apply in a given scenario.',
+      'Given a set of real-world scenarios, the learner will select the correct factual reference for each situation without defaulting to guesswork, demonstrating deliberate and accurate decision-making.',
+    ],
+    strategies: [
+      'Have learners work through scenario-based exercises where they must choose which fact, code, rule, or guideline to apply — and justify their choice before seeing whether they were right. This develops impulse control by requiring a deliberate pause before acting on factual knowledge.',
+      'Ask participants to use a fact or reference to resolve a simulated situation without access to a full resource library — just the key facts they have internalised. The constraint surfaces their automatic impulses and tests whether retrieved facts hold up under pressure.',
+      'Decision-point scenario: learners read a short narrative that reaches a fork, and must select which fact-based option to apply. The branching format reinforces the executing sub-process of Apply while mimicking the snap-judgment demands of real performance contexts.',
+      'Fact-application card match: learners are given situation cards and fact cards and must match each situation to the correct fact or guideline. This bridges the gap between retrieval and use at the factual level and targets the implementing sub-process.',
+    ],
+  },
+  'apply-conceptual': {
+    competency: 'Discipline',
+    verbs: ['associate','connect','relate','model','organise','categorise','link'],
+    objectives: [
+      'Connect a theoretical principle to a real-world situation where it would explain an observed outcome.',
+      'Organise a set of ideas or cases into a conceptual framework that makes their relationships visible.',
+      'Model how a known concept or principle would play out under a new set of conditions.',
+      'Given a complex scenario with multiple contributing factors, the learner will categorise each factor according to a relevant conceptual model and link them to show how they interact.',
+    ],
+    strategies: [
+      'Have learners take a concept from the module and apply it to a situation from their own work context — "Where does this show up in your environment?" Discipline in applying concepts means resisting vague generalizations and committing to specific, accurate connections.',
+      'Ask participants to organise a set of case examples into conceptual buckets using a framework they have been learning. Require them to defend each placement — this builds both conceptual fluency and the disciplined thinking that prevents sloppy categorization.',
+      'Concept application gallery walk: learners rotate through a set of posted scenarios and write which concept best applies and why. Each station deepens the implementing sub-process by requiring flexible conceptual application across varied contexts.',
+      'Framework-mapping exercise: learners are given a model or theory and must draw connections between its elements and a novel situation. The mapping format makes abstract relationships concrete and develops the disciplined habit of checking real situations against conceptual structures before drawing conclusions.',
+    ],
+  },
+  'apply-procedural': {
+    competency: 'Emotional Stability',
+    verbs: ['calculate','construct','perform','execute','solve','build','implement','operate','simulate','practise'],
+    objectives: [
+      'Execute a standard procedure correctly in a simulated or authentic performance context.',
+      'Perform a multi-step process from beginning to end without prompting or step-by-step guidance.',
+      'Solve a routine problem by applying the appropriate method or technique.',
+      'Given a simulated scenario with realistic time pressure, the learner will implement the correct procedure from start to finish with no critical steps omitted, demonstrating composure throughout.',
+    ],
+    strategies: [
+      'Have learners perform a procedure under gradually increasing complexity — start simple, then add a realistic complication. Emotional stability under procedural pressure develops when learners practise maintaining their process even when conditions shift unexpectedly.',
+      'Ask participants to practise a procedure twice: once with full reference materials available, and once without. The second attempt surfaces where their procedural knowledge is genuinely internalised versus dependent on external scaffolding.',
+      'Simulated practice scenario: learners execute a procedure in a low-stakes but realistic simulation that mimics the pressure of the actual environment. This targets the executing sub-process directly and builds the procedural fluency that supports emotional steadiness in high-stakes moments.',
+      'Peer observation with checklist: one learner performs while a partner marks each step on a procedural checklist, then they swap. The observer role develops the ability to track a process objectively; the performer role builds composure under observation — both dimensions of emotional stability.',
+    ],
+  },
+  'apply-metacognitive': {
+    competency: 'Resilience',
+    verbs: ['plan','adapt','transfer','develop','apply'],
+    objectives: [
+      'Plan a personal approach to an unfamiliar task by drawing on strategies that have worked before.',
+      'Adapt a learning strategy mid-task when the original approach is not producing the expected results.',
+      'Transfer a method or framework learned in one context to a significantly different problem.',
+      'Given an unexpected change in task conditions mid-exercise, the learner will adapt their original plan and apply a revised strategy that still achieves the core objective.',
+    ],
+    strategies: [
+      'Have learners plan their approach to a task before beginning — what strategy will they use, and why? After completing the task, ask them to reflect: did the plan work, or did they need to adapt? Documenting this loop builds the metacognitive self-regulation that underlies resilience.',
+      'Build in a deliberate mid-task pause during a complex exercise and ask learners: "Is your current approach working? What would you change?" This develops the habit of self-monitoring during performance — the live application of metacognitive knowledge.',
+      'Transfer challenge activity: learners who have practised a strategy in one context are given a different context with the same underlying structure and asked to apply the same approach. The cognitive demand of recognizing what transfers and what doesn\'t is the core mechanism of metacognitive application and resilience.',
+      'Strategy reflection journal: after each major activity, learners briefly record what they planned, what they actually did, and what they would do differently next time. Over multiple sessions, this builds a personal evidence base for adaptive self-regulation — resilience through honest self-documentation.',
+    ],
+  },
+
+  /* ── ANALYZE ── */
+  'analyze-factual': {
+    competency: 'Empathy',
+    verbs: ['identify','list','find','separate','compare','order','classify','point out'],
+    objectives: [
+      'Identify the factual components that are present — and notably absent — from a data set or report.',
+      'Separate relevant from irrelevant details in a complex information set.',
+      'Compare two sets of factual information to determine where they align and where they diverge.',
+      'Given a real-world case containing multiple data points, the learner will identify the three most critical facts driving the situation and point out which details are misleading or extraneous.',
+    ],
+    strategies: [
+      'Have learners read a scenario or case and highlight every factual claim it contains — then ask: which facts matter most to the people affected? This connects analytic work on factual data to empathy: understanding whose experience is captured and whose is missing from the record.',
+      'Ask participants to compare two versions of the same situation — one told from one perspective, another from a different one — and list the factual differences between the two accounts. The analysis surfaces how factual records reflect the position of their source.',
+      'Data disaggregation exercise: learners are given a summary dataset and must separate it into its component groups or categories, then note what each sub-group\'s facts reveal. This targets the differentiating sub-process and develops the analytic precision needed to notice who is and isn\'t visible in the data.',
+      'Fact-checking comparison activity: learners receive two documents covering the same event and must identify factual consistencies and inconsistencies between them. This exercises the comparing sub-process at the factual level and builds the careful reading habits that support accurate social perception.',
+    ],
+  },
+  'analyze-conceptual': {
+    competency: 'Observation',
+    verbs: ['distinguish','differentiate','examine','infer','question','reason','categorise','investigate','cause and effect'],
+    objectives: [
+      'Distinguish between concepts that appear similar but differ in significant ways.',
+      'Examine a model or theory to identify assumptions embedded within it.',
+      'Question the cause-and-effect claims made within a conceptual argument.',
+      'Given a conceptual framework presented as settled, the learner will investigate at least two underlying assumptions and differentiate which claims are supported by evidence from those that are asserted without it.',
+    ],
+    strategies: [
+      'Have learners select two related concepts from the module and develop a structured comparison that goes beyond surface features — asking: what is fundamentally different about how these concepts frame a problem? Sharp observation at the conceptual level means noticing what distinctions actually matter.',
+      'Ask participants to examine a widely used model or theory and identify what it leaves out or cannot account for. Conceptual analysis deepens when learners learn to observe the edges of a framework as carefully as its center.',
+      'Cause-and-effect mapping: learners diagram the causal logic embedded in a theory or argument, distinguishing between assumed relationships and demonstrated ones. This targets the organizing sub-process at the conceptual level.',
+      'Assumption surfacing discussion: small groups are assigned a prevailing concept or framework and must generate at least three "what if this assumption were false?" questions. The format develops the questioning and reasoning verbs in this cell while sharpening the capacity for critical observation.',
+    ],
+  },
+  'analyze-procedural': {
+    competency: 'Anticipation',
+    verbs: ['dissect','test','inspect','break down','discriminate','divide','highlight'],
+    objectives: [
+      'Break down a procedure into its component steps and identify the function each step serves.',
+      'Test a process against a specific failure condition to determine where it breaks down.',
+      'Inspect a completed workflow to identify where errors or inefficiencies were introduced.',
+      'Given a procedure that produced an unexpected outcome, the learner will dissect the process step by step, discriminate which decisions contributed to the outcome, and highlight the single most consequential failure point.',
+    ],
+    strategies: [
+      'Have learners trace a procedure that went wrong — rather than one that worked — and ask them to break it down step by step to find where the deviation began. Anticipation develops when analysis is practised on failure, not just success.',
+      'Ask participants to divide a complex procedure into phases, and for each phase, ask: "What could go wrong here, and how would you know?" This develops the discriminating sub-process and builds the forward-looking analytical habit that anticipation requires.',
+      'Process autopsy activity: learners receive a case study of a procedure that failed and must dissect it systematically — identifying which steps were performed incorrectly, skipped, or performed in the wrong context. This targets the differentiating sub-process of Analyze at the procedural knowledge level.',
+      'Inspect-and-flag exercise: learners are given a written or visual representation of a running process and must highlight each decision point where a different choice would have led to a different outcome. The annotation format makes procedural analysis visible and discussable.',
+    ],
+  },
+  'analyze-metacognitive': {
+    competency: 'Interpretation',
+    verbs: ['appraise','prioritise','arrange','rank','focus','analyse'],
+    objectives: [
+      'Appraise their own reasoning process on a recently completed task to identify where thinking was most and least reliable.',
+      'Prioritise which aspects of their current approach to a problem are most in need of revision.',
+      'Rank the relative effectiveness of the strategies they have used in a learning sequence based on the outcomes produced.',
+      'Given a multi-step task they have just completed, the learner will analyse their own decision-making at each stage, focus on the two most consequential choices, and arrange the factors that influenced those choices in order of impact.',
+    ],
+    strategies: [
+      'Have learners write a structured retrospective after completing a challenging task: "What did I decide? Why did I decide it? What would I do differently?" Appraising one\'s own reasoning — not just the outcome — is the analytical move that builds interpretive self-awareness.',
+      'Ask participants to rank the strategies they used during a learning sequence from most to least effective, and defend each ranking with a specific reason. Prioritising among one\'s own approaches requires the same differentiating and organizing sub-processes as any other analytic task.',
+      'Decision-mapping reflection: learners diagram the decision points in a task they just completed, noting at each point what information they used and what they ignored. This targets the attributing sub-process at the metacognitive level — tracing why they thought what they thought.',
+      'Comparative strategy analysis: learners compare their approach on two tasks of similar type, focusing on what was consistent and what varied. Identifying patterns in their own thinking builds the interpretive capacity to read their cognitive behavior as data.',
+    ],
+  },
+
+  /* ── EVALUATE ── */
+  'evaluate-factual': {
+    competency: 'Influence',
+    verbs: ['rate','measure','assess','select','award','grade'],
+    objectives: [
+      'Rate the accuracy of a set of factual claims against a reliable reference or standard.',
+      'Assess which data points in a report are most credible and which should be questioned.',
+      'Measure actual performance results against defined benchmarks to determine whether standards were met.',
+      'Given a set of competing factual sources on the same topic, the learner will select the most credible source and grade the others according to their accuracy, citing the criteria used.',
+    ],
+    strategies: [
+      'Have learners evaluate a set of factual claims — some accurate, some partially correct, some wrong — and rate each one against a provided standard. Ask them to share their ratings with a peer and discuss any disagreements. The influence dimension emerges in how confidently and accurately they make the case for their evaluation.',
+      'Ask participants to assess a real or simulated performance result against a measurable benchmark. Require them to go beyond "pass or fail" and articulate the degree of deviation from the standard. Precise evaluation of factual evidence is the foundation of credible influence.',
+      'Claim credibility audit: learners receive a document containing factual assertions from multiple sources and must rate each claim\'s reliability using a rubric. This targets the checking sub-process of Evaluate at the factual level, building the habit of verifying before accepting.',
+      'Benchmark comparison activity: learners measure a set of outputs or results against defined performance criteria and award ratings at each dimension. The structured rating format makes evaluative judgment visible, discussable, and transferable to real assessment contexts.',
+    ],
+  },
+  'evaluate-conceptual': {
+    competency: 'Discernment',
+    verbs: ['argue','defend','justify','critique','convince','recommend','decide'],
+    objectives: [
+      'Argue for or against the applicability of a theory or model to a specific context, with evidence.',
+      'Critique the assumptions underlying a widely accepted framework and defend a more accurate alternative.',
+      'Justify a recommendation by demonstrating how it aligns with established principles and outperforms alternatives.',
+      'Given two competing approaches to solving a conceptual problem, the learner will defend a position by critiquing each approach against agreed criteria and recommend the stronger one with reasoned justification.',
+    ],
+    strategies: [
+      'Have learners take a position on a conceptual debate — "Which model better explains this phenomenon, and why?" — and require them to argue it using evidence from the material rather than preference. Discernment is the capacity to distinguish between what is appealing and what is defensible.',
+      'Ask participants to critique a published or widely cited framework for its strengths and limitations. The task should culminate in a recommendation: given its weaknesses, when should this model be used and when should it not?',
+      'Structured academic controversy: small groups are assigned opposing positions on a conceptual claim and must build the strongest possible case for their assigned side before switching. This exercises the argue, defend, and justify verbs in a format that develops discernment through deliberate exposure to competing reasoning.',
+      'Decision brief activity: learners write a short advisory document recommending a course of conceptual action and defend it against at least two counterarguments. The format mirrors real professional decision-making at the conceptual level.',
+    ],
+  },
+  'evaluate-procedural': {
+    competency: 'Relationship Management',
+    verbs: ['test','prove','validate','rule on','support','determine'],
+    objectives: [
+      'Test a procedure against defined quality criteria to determine whether it meets the required standard.',
+      'Validate that a completed process produced the intended outcome by checking each critical step.',
+      'Determine whether a method was executed correctly based on observable results and procedural evidence.',
+      'Given a peer\'s completed procedural output, the learner will prove or rule on whether the method was followed correctly by comparing each step to the reference standard and supporting the conclusion with specific evidence.',
+    ],
+    strategies: [
+      'Have learners evaluate a peer\'s procedure execution using a structured checklist — not just marking pass/fail but identifying which specific steps were strong and which fell short. Relationship management develops when feedback is delivered accurately and constructively within a procedural assessment context.',
+      'Ask participants to validate their own completed process by testing its outcome against the expected result. Require them to support their conclusion: "The outcome meets the standard because…" or "It doesn\'t meet the standard because…"',
+      'Procedural quality review: learners receive a documented or recorded execution of a procedure and must test it against a rubric, determining where deviations occurred and what they meant for the final outcome. This targets the checking sub-process of Evaluate at the procedural level.',
+      'Cross-team procedure audit: pairs of learners exchange their completed procedural work and evaluate each other\'s execution against shared criteria. The reciprocal format develops both evaluative judgment and the interpersonal skills involved in managing a professional review relationship.',
+    ],
+  },
+  'evaluate-metacognitive': {
+    competency: 'Accountability',
+    verbs: ['judge','conclude','estimate','infer','prioritise','reflect'],
+    objectives: [
+      'Judge whether their chosen learning strategy for a task was the most effective option available.',
+      'Conclude which aspects of their performance reflected genuine understanding versus guesswork.',
+      'Prioritise which metacognitive habits most need strengthening based on evidence from their own learning history.',
+      'Given a record of their performance across a learning sequence, the learner will reflect on the quality of their self-regulation decisions and infer what they would commit to changing in the next comparable situation.',
+    ],
+    strategies: [
+      'Have learners complete a post-task accountability reflection: "Did I use the right approach? What evidence supports that? What would a more effective version of me have done differently?" The evaluative move here is judging one\'s own judgment — the defining act of metacognitive accountability.',
+      'Ask participants to estimate their level of mastery before a check-for-understanding task, then compare the estimate to their actual result. Discuss not just the gap but why it existed: overconfidence? Under-preparation? Misread instructions?',
+      'Learning audit portfolio: learners accumulate evidence from several tasks and then judge the overall quality and consistency of their self-regulation across them — prioritising what to continue, what to change, and what to abandon. This targets the critiquing sub-process of Evaluate at the metacognitive level.',
+      'Accountability contract discussion: in pairs, learners share one conclusion about their own learning effectiveness and commit to one specific change for the next task. The public commitment structure provides the social accountability dimension that distinguishes this cell from private reflection alone.',
+    ],
+  },
+
+  /* ── CREATE (from Synthesis column in image) ── */
+  'create-factual': {
+    competency: 'Responsibility',
+    verbs: ['compile','produce','construct','generate','write','compose','create'],
+    objectives: [
+      'Compile a reference document that consolidates essential facts from multiple sources into a usable format.',
+      'Produce a factual summary or briefing that accurately represents the key data points a new learner would need.',
+      'Write a glossary, fact sheet, or quick-reference guide from materials encountered during a learning sequence.',
+      'Given raw data and source materials on a new topic, the learner will construct a structured reference resource containing the minimum essential facts required for a learner to perform a defined task independently.',
+    ],
+    strategies: [
+      'Have learners synthesise facts from across a module into a one-page job aid or quick-reference card they would genuinely use on the job. Responsibility shows up in the care taken to make the resource accurate and useful to others — not just complete for the sake of completion.',
+      'Ask participants to produce a factual briefing document for a peer who missed a session, including only the most critical information. The constraint of brevity and the audience of accountability both reinforce the responsibility dimension of this cell.',
+      'Resource construction project: learners compile a structured factual reference — a glossary, decision tree, or checklist — from materials they have engaged with. This targets the producing and generating sub-processes of Create at the factual level, requiring selection, organization, and commitment to accuracy.',
+      'Annotated reference build: pairs of learners collaboratively construct a shared fact document, with each person responsible for a defined section. The collaborative ownership structure makes the responsibility dimension concrete — each learner\'s contribution directly affects what their partner can rely on.',
+    ],
+  },
+  'create-conceptual': {
+    competency: 'Integration',
+    verbs: ['design','formulate','propose','develop','plan','combine','hypothesise'],
+    objectives: [
+      'Design a conceptual framework that integrates two or more previously separate principles into a coherent model.',
+      'Propose a new way of explaining a complex relationship that makes it more accessible or actionable than existing models.',
+      'Develop a theory or hypothesis that accounts for a pattern or phenomenon not fully explained by current frameworks.',
+      'Given a set of disconnected concepts from different parts of a learning experience, the learner will combine them into a single coherent framework that demonstrates how they relate, and formulate a testable hypothesis about what the framework predicts.',
+    ],
+    strategies: [
+      'Have learners take two or more concepts they have studied separately and design a model that shows how they interact. Integration at the conceptual level requires more than listing connections — it demands a new structure that is more explanatory than either concept alone.',
+      'Ask participants to propose a revision to a framework they have critiqued, grounded in the evidence and reasoning they developed during the analyze and evaluate stages. This caps a progressive cognitive sequence and produces something genuinely new rather than recombined.',
+      'Conceptual model design challenge: learners are given a phenomenon that no single covered framework fully explains, and must hypothesise a new model that accounts for it. This targets the generating and planning sub-processes of Create at the conceptual knowledge level.',
+      'Theory-building presentation: small groups develop and present a conceptual argument — including their proposed model, the evidence they drew on, and the predictions their theory makes. The presentation format pushes the combining and integrating sub-processes into articulated form, making new conceptual thinking visible and testable.',
+    ],
+  },
+  'create-procedural': {
+    competency: 'Innovation',
+    verbs: ['build','assemble','implement','invent','model','adapt','convert','innovate'],
+    objectives: [
+      'Build a new or adapted procedure to address a challenge that existing methods do not fully solve.',
+      'Assemble a workflow by combining elements from multiple established processes into a coherent new approach.',
+      'Invent a practical technique or method that improves on current practice in a measurable way.',
+      'Given a constraint or requirement that existing procedures cannot accommodate, the learner will adapt or innovate a new method, implement it in a simulated context, and model the expected outcome compared to the standard approach.',
+    ],
+    strategies: [
+      'Have learners identify a gap or inefficiency in a procedure they know well and design an improved version. Innovation at the procedural level is grounded: it starts with knowing the existing method deeply enough to see where it falls short — and having the technical fluency to build something better.',
+      'Ask participants to assemble a new process from component steps drawn from two or more different procedures, explaining which elements they kept, which they modified, and why. The explicit justification of procedural design choices builds disciplined creative thinking rather than arbitrary novelty.',
+      'Process design challenge: learners are given a novel task for which no current procedure exists and must invent one — specifying each step, the criteria for success, and at least one risk to monitor. This targets the planning and producing sub-processes of Create at the procedural level.',
+      'Build-and-test iteration: learners create a procedure and then test it against a realistic scenario, noting where it succeeds and where it breaks. They revise and retest. The iterative format mirrors genuine procedural innovation and builds the adaptive fluency that distinguishes invention from imitation.',
+    ],
+  },
+  'create-metacognitive': {
+    competency: 'Wisdom',
+    verbs: ['devise','speculate','originate','transform','theorise','imagine','visualise'],
+    objectives: [
+      'Devise a personal learning strategy tailored to a type of task that has historically challenged them.',
+      'Theorise about why a particular pattern in their own thinking leads to consistent errors or insights.',
+      'Visualise an ideal version of their future practice and speculate on the specific changes required to reach it.',
+      'Given a complex, novel challenge unlike anything encountered before, the learner will imagine a new approach, theorise about why it would work based on their accumulated self-knowledge, and originate a personal plan for how to develop the capability it requires.',
+    ],
+    strategies: [
+      'Have learners reflect on their entire learning history across a program and devise a personal development strategy for what comes next — not as an assignment, but as a genuine commitment they own. Wisdom is the convergence of self-knowledge and forward design; this task asks for both simultaneously.',
+      'Ask participants to theorise about their own learning blind spots: "What kind of thinking do I consistently avoid or undervalue? Why? What would it look like to transform that into a strength?" The speculative register here is appropriate to the Create level — it generates something genuinely new rather than cataloguing the known.',
+      'Personal learning framework design: learners create a visual or written model of how they learn best — the conditions, strategies, sequences, and supports that produce their strongest performance. This targets the generating and planning sub-processes of Create at the metacognitive level, producing an artifact that is both self-referential and forward-looking.',
+      'Imagination-to-action exercise: learners visualise a future professional scenario in which they are operating at their highest capability, then work backward to originate the specific metacognitive practices that would make that scenario possible. The backward design from an imagined ideal is the hallmark of wisdom — not just knowing who you are, but designing who you intend to become.',
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════
+//  GUIDED ENTRY — coaching flow
+//  goal → terminal objective → main steps →
+//  select step → verb lookup → result
+// ═══════════════════════════════════════════
+
+// Plain-language explanation of WHY a verb maps to each cell.
+const WHY = {
+  'remember-factual':
+    'This is a <strong>Remember</strong> verb for <strong>Factual</strong> knowledge — learners are retrieving specific facts, terms, or details from memory. It\'s the most concrete starting point and a good anchor before building deeper understanding.',
+  'remember-conceptual':
+    'This is a <strong>Remember</strong> verb for <strong>Conceptual</strong> knowledge — learners are recalling categories, patterns, or relationships, not just isolated facts. They\'re retrieving how ideas connect.',
+  'remember-procedural':
+    'This is a <strong>Remember</strong> verb for <strong>Procedural</strong> knowledge — learners are recalling a sequence of steps or a method. They\'re retrieving a process, not just a fact.',
+  'remember-metacognitive':
+    'This is a <strong>Remember</strong> verb for <strong>Metacognitive</strong> knowledge — learners are accessing awareness of their own thinking or prior knowledge. It\'s a self-reflective form of recall.',
+
+  'understand-factual':
+    'This is an <strong>Understand</strong> verb for <strong>Factual</strong> knowledge — learners are making sense of facts and information in their own words. They\'ve moved from "I remember it" to "I can explain it."',
+  'understand-conceptual':
+    'This is an <strong>Understand</strong> verb for <strong>Conceptual</strong> knowledge — learners are interpreting how ideas, principles, or relationships work. They\'re not just recalling — they\'re constructing meaning.',
+  'understand-procedural':
+    'This is an <strong>Understand</strong> verb for <strong>Procedural</strong> knowledge — learners are demonstrating that they grasp how and why a method or process works, not just that it exists.',
+  'understand-metacognitive':
+    'This is an <strong>Understand</strong> verb for <strong>Metacognitive</strong> knowledge — learners are checking their own comprehension, making predictions, or inferring gaps in their understanding.',
+
+  'apply-factual':
+    'This is an <strong>Apply</strong> verb for <strong>Factual</strong> knowledge — learners are using the right information at the right time in a real situation. Knowing the facts wasn\'t enough; now they have to use them.',
+  'apply-conceptual':
+    'This is an <strong>Apply</strong> verb for <strong>Conceptual</strong> knowledge — learners are connecting concepts to real situations, organising ideas meaningfully, or modelling a relationship.',
+  'apply-procedural':
+    'This is an <strong>Apply</strong> verb for <strong>Procedural</strong> knowledge — learners are actually carrying out a skill, technique, or method. This is performance, not just understanding.',
+  'apply-metacognitive':
+    'This is an <strong>Apply</strong> verb for <strong>Metacognitive</strong> knowledge — learners are regulating their own approach: planning, adapting strategy, or transferring learning to a new context.',
+
+  'analyze-factual':
+    'This is an <strong>Analyse</strong> verb for <strong>Factual</strong> knowledge — learners are breaking factual information apart to identify components, find differences, or separate what\'s relevant from what\'s not.',
+  'analyze-conceptual':
+    'This is an <strong>Analyse</strong> verb for <strong>Conceptual</strong> knowledge — learners are examining underlying relationships and structures: questioning assumptions, tracing cause and effect, or distinguishing related ideas.',
+  'analyze-procedural':
+    'This is an <strong>Analyse</strong> verb for <strong>Procedural</strong> knowledge — learners are investigating a process or method: testing it, breaking it into parts, or identifying where it succeeds or breaks down.',
+  'analyze-metacognitive':
+    'This is an <strong>Analyse</strong> verb for <strong>Metacognitive</strong> knowledge — learners are critically examining their own reasoning: prioritising perspectives, ranking options, or reflecting on how they approach problems.',
+
+  'evaluate-factual':
+    'This is an <strong>Evaluate</strong> verb for <strong>Factual</strong> knowledge — learners are judging the accuracy or quality of specific information against clear criteria.',
+  'evaluate-conceptual':
+    'This is an <strong>Evaluate</strong> verb for <strong>Conceptual</strong> knowledge — learners are defending or critiquing ideas, arguing a position, justifying a conclusion, or recommending a course of action.',
+  'evaluate-procedural':
+    'This is an <strong>Evaluate</strong> verb for <strong>Procedural</strong> knowledge — learners are validating whether a method or process actually works, and determining why.',
+  'evaluate-metacognitive':
+    'This is an <strong>Evaluate</strong> verb for <strong>Metacognitive</strong> knowledge — learners are making judgements about their own thinking or performance: self-assessing, reflecting on quality, or drawing conclusions about their approach.',
+
+  'create-factual':
+    'This is a <strong>Create</strong> verb for <strong>Factual</strong> knowledge — learners are producing something tangible using factual content: compiling, composing, or constructing an output from known material.',
+  'create-conceptual':
+    'This is a <strong>Create</strong> verb for <strong>Conceptual</strong> knowledge — learners are synthesising ideas into something new: designing a framework, formulating a plan, or proposing a novel solution.',
+  'create-procedural':
+    'This is a <strong>Create</strong> verb for <strong>Procedural</strong> knowledge — learners are building or implementing something real: applying skills to construct, invent, or innovate a working product or process.',
+  'create-metacognitive':
+    'This is a <strong>Create</strong> verb for <strong>Metacognitive</strong> knowledge — learners are originating something that reflects self-directed thinking: theorising, imagining possibilities, or transforming how they approach a problem.',
+};
+
+// Row colours for result display (matches cell CSS)
+const KNOW_COLORS = {
+  metacognitive: { bg: '#1e0e28', text: '#f0e8f8' },
+  procedural:    { bg: '#3a1e50', text: '#e8d8f8' },
+  conceptual:    { bg: '#c4a8d4', text: '#1e0e28' },
+  factual:       { bg: '#f2edf8', text: '#1e0e28' },
+};
+
+// Icons for each knowledge domain (Phosphor Icons)
+const KNOW_ICONS = {
+  metacognitive: '⧩',
+  procedural:    '☐',
+  conceptual:    '◎',
+  factual:       '≡',
+};
+
+function findVerb(raw) {
+  const input = raw.trim().toLowerCase();
+  if (!input) return null;
+  // 1. Exact match
+  for (const [key, data] of Object.entries(CELLS)) {
+    for (const v of data.verbs) {
+      if (v.toLowerCase() === input) return { key, matchedVerb: v };
+    }
+  }
+  // 2. Prefix match (min 4 chars to avoid false positives)
+  if (input.length >= 4) {
+    for (const [key, data] of Object.entries(CELLS)) {
+      for (const v of data.verbs) {
+        const vl = v.toLowerCase();
+        if (vl.startsWith(input) || input.startsWith(vl)) return { key, matchedVerb: v };
+      }
+    }
+  }
+  return null;
+}
+
+const guideState = {
+  step: 'goal', goal: '', terminal: '', steps: [''], selectedStep: '', verbResult: null,
+};
+
+function showGuide() {
+  Object.assign(guideState, {
+    step: 'goal', goal: '', terminal: '', steps: [''], selectedStep: '', verbResult: null,
+  });
+  document.getElementById('guide-overlay').classList.remove('hidden');
+  renderGuide();
+}
+
+function hideGuide() {
+  document.getElementById('guide-overlay').classList.add('hidden');
+}
+
+function goBack(toStep) { guideState.step = toStep; renderGuide(); }
+
+function clip(s, n) { return s.length > n ? s.slice(0, n) + '…' : s; }
+
+function trailHtml() {
+  const { step, goal, terminal } = guideState;
+  if (step === 'goal') return '';
+  const rows = [];
+  if (goal)     rows.push(`<div class="gc-trail-item"><span>Goal:</span> “${clip(goal, 90)}”</div>`);
+  if (terminal && step !== 'terminal')
+    rows.push(`<div class="gc-trail-item"><span>Objective:</span> “${clip(terminal, 90)}”</div>`);
+  return rows.length ? `<div class="gc-trail">${rows.join('')}</div>` : '';
+}
+
+function renderGuide() {
+  const card = document.getElementById('guide-card');
+  const { step, goal, terminal, steps, selectedStep, verbResult } = guideState;
+
+  if (step === 'goal') {
+    card.innerHTML = `
+      <h2>Performance-Based Objectives Builder</h2>
+      <div class="gc-q">What do you want this training to achieve?</div>
+      <div class="gc-sub">Describe the outcome in plain language — business goal, performance gap, whatever comes to mind. Don't worry about getting it perfect yet.</div>
+      <textarea id="goal-input" class="gc-textarea" rows="3"
+        placeholder="e.g. I want learners to use the new CRM software so we can increase revenue by 10%">${goal}</textarea>
+      <div class="gc-footer">
+        <button class="gc-ghost" onclick="hideGuide()">Skip — show me the full grid</button>
+        <button class="gc-submit" onclick="submitGoal()">Continue →</button>
+      </div>`;
+    setTimeout(() => document.getElementById('goal-input')?.focus(), 50);
+
+  } else if (step === 'terminal') {
+    card.innerHTML = `
+      <h2>Performance-Based Objectives Builder</h2>
+      ${trailHtml()}
+      <div class="gc-q">What should learners be able to DO?</div>
+      <div class="gc-sub">Reframe as a learner action — focus on what they perform or produce, not the business result. Start with a verb.</div>
+      <input id="terminal-input" class="gc-input" type="text" style="width:100%;margin-bottom:14px;"
+        value="${terminal}"
+        placeholder="e.g. Log and track customer interactions using the CRM dashboard"
+        onkeydown="if(event.key==='Enter') submitTerminal()" />
+      <div class="gc-footer">
+        <button class="gc-ghost" onclick="goBack('goal')">← Back</button>
+        <div style="display:flex;gap:8px;">
+          <button class="gc-ghost" onclick="hideGuide()">Skip to grid</button>
+          <button class="gc-submit" onclick="submitTerminal()">Continue →</button>
+        </div>
+      </div>`;
+    setTimeout(() => document.getElementById('terminal-input')?.focus(), 50);
+
+  } else if (step === 'steps') {
+    const rows = steps.map((s, i) => `
+      <div class="gc-step-row">
+        <span class="gc-step-num">${i + 1}</span>
+        <input class="gc-input gc-step-input" type="text" value="${s.replace(/"/g,'&quot;')}"
+          placeholder="e.g. Navigate the dashboard"
+          oninput="guideState.steps[${i}]=this.value"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addStep()}" />
+        ${steps.length > 1 ? `<button class="gc-step-del" onclick="removeStep(${i})">×</button>` : ''}
+      </div>`).join('');
+    card.innerHTML = `
+      <h2>Performance-Based Objectives Builder</h2>
+      ${trailHtml()}
+      <div class="gc-q">What are the main steps learners need to master?</div>
+      <div class="gc-sub">Break the terminal objective into 2–5 enabling steps. Each one will become its own learning objective.</div>
+      <div id="steps-list">${rows}</div>
+      ${steps.length < 5 ? `<button class="gc-add-step" onclick="addStep()">+ Add a step</button>` : ''}
+      <div class="gc-footer" style="margin-top:14px;">
+        <button class="gc-ghost" onclick="goBack('terminal')">← Back</button>
+        <div style="display:flex;gap:8px;">
+          <button class="gc-ghost" onclick="hideGuide()">Skip to grid</button>
+          <button class="gc-submit" onclick="submitSteps()">Continue →</button>
+        </div>
+      </div>`;
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('.gc-step-input');
+      if (inputs[0] && !inputs[0].value) inputs[0].focus();
+    }, 50);
+
+  } else if (step === 'selectStep') {
+    const valid = steps.filter(s => s.trim());
+    card.innerHTML = `
+      <h2>Performance-Based Objectives Builder</h2>
+      ${trailHtml()}
+      <div class="gc-q">Which step do you want to work on first?</div>
+      <div class="gc-sub">We'll help you find the right objective type for that step.</div>
+      <div class="gc-opts g1" style="margin-bottom:14px;">
+        ${valid.map((s, i) => `
+          <button class="gc-opt" onclick="selectStep(${i})">
+            <div class="gc-opt-label">${i + 1}. ${s}</div>
+          </button>`).join('')}
+      </div>
+      <div class="gc-footer">
+        <button class="gc-ghost" onclick="goBack('steps')">← Back</button>
+        <button class="gc-ghost" onclick="hideGuide()">Skip to grid</button>
+      </div>`;
+
+  } else if (step === 'verb') {
+    const backTarget = steps.filter(s => s.trim()).length > 1 ? 'selectStep' : 'steps';
+    card.innerHTML = `
+      <h2>Performance-Based Objectives Builder</h2>
+      ${trailHtml()}
+      ${selectedStep ? `<div class="gc-context-step">Working on: <em>"${selectedStep}"</em></div>` : ''}
+      <div class="gc-q">What verb are you using for this objective?</div>
+      <div class="gc-sub">SMEs often have a verb in mind — even if it's not quite right. Enter it and we'll find the best match and explain why.</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="verb-input" class="gc-input" type="text"
+          placeholder="e.g. list, explain, design, compare…"
+          onkeydown="if(event.key==='Enter') lookupVerb()"
+          autocomplete="off" />
+        <button class="gc-submit" onclick="lookupVerb()">Find it →</button>
+      </div>
+      <div id="verb-feedback" style="min-height:18px;font-size:0.68rem;color:#c0392b;margin-bottom:4px;"></div>
+      <div class="gc-footer">
+        <button class="gc-ghost" onclick="goBack('${backTarget}')">← Back</button>
+        <button class="gc-ghost" onclick="hideGuide()">Skip to grid</button>
+      </div>`;
+    setTimeout(() => document.getElementById('verb-input')?.focus(), 50);
+
+  } else if (step === 'result' && verbResult) {
+    const { key, rawVerb } = verbResult;
+    const [cogId, knowId]  = key.split('-');
+    const cog   = COG.find(c => c.id === cogId);
+    const know  = KNOW.find(k => k.id === knowId);
+    const data  = CELLS[key];
+    const color = KNOW_COLORS[knowId];
+    card.innerHTML = `
+      <h2>Performance-Based Objectives Builder</h2>
+      ${trailHtml()}
+      ${selectedStep ? `<div class="gc-context-step">Working on: <em>"${selectedStep}"</em></div>` : ''}
+      <div class="gc-q" style="margin-bottom:14px;">Here's where <em>"${rawVerb}"</em> fits:</div>
+      <div class="gc-result-badge" style="background:${color.bg};color:${color.text};">
+        <div class="grb-cog">${cog.label}</div>
+        <div class="grb-sep">×</div>
+        <div class="grb-know">${know.label}</div>
+        ${data.competency ? `<div class="grb-comp">${data.competency}</div>` : ''}
+      </div>
+      <div class="gc-why-label">Here's why:</div>
+      <div class="gc-why-text">${WHY[key] || ''}</div>
+      <div class="gc-result-actions">
+        <button class="gc-submit" onclick="applyResult('${key}')">Explore this cell →</button>
+      </div>
+      <div class="gc-footer" style="margin-top:10px;">
+        <button class="gc-ghost" onclick="goBack('verb')">← Try another verb</button>
+        <button class="gc-ghost" onclick="hideGuide()">Skip to grid</button>
+      </div>`;
+  }
+}
+
+function submitGoal() {
+  guideState.goal = (document.getElementById('goal-input')?.value || '').trim();
+  guideState.step = 'terminal';
+  renderGuide();
+}
+
+function submitTerminal() {
+  guideState.terminal = (document.getElementById('terminal-input')?.value || '').trim();
+  guideState.step = 'steps';
+  renderGuide();
+}
+
+function addStep() {
+  if (guideState.steps.length < 5) {
+    guideState.steps.push('');
+    renderGuide();
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('.gc-step-input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }, 30);
+  }
+}
+
+function removeStep(i) { guideState.steps.splice(i, 1); renderGuide(); }
+
+function submitSteps() {
+  const valid = guideState.steps.filter(s => s.trim());
+  if (!valid.length) {
+    guideState.selectedStep = '';
+    guideState.step = 'verb';
+  } else if (valid.length === 1) {
+    guideState.selectedStep = valid[0];
+    guideState.step = 'verb';
+  } else {
+    guideState.step = 'selectStep';
+  }
+  renderGuide();
+}
+
+function selectStep(i) {
+  guideState.selectedStep = guideState.steps.filter(s => s.trim())[i];
+  guideState.step = 'verb';
+  renderGuide();
+}
+
+function lookupVerb() {
+  const raw    = (document.getElementById('verb-input')?.value || '').trim();
+  const result = findVerb(raw);
+  if (!result) {
+    document.getElementById('verb-feedback').textContent = raw
+      ? `We don't recognise "${raw}" yet — try the base form of the verb, or skip to explore the full grid.`
+      : 'Please enter a verb first.';
+    return;
+  }
+  guideState.verbResult = { ...result, rawVerb: raw };
+  guideState.step = 'result';
+  renderGuide();
+}
+
+function applyResult(key) {
+  hideGuide();
+  const cellEl = document.querySelector(`.cell[data-key="${key}"]`);
+  if (!cellEl) return;
+  const [cogId, knowId] = key.split('-');
+  const cog  = COG.find(c => c.id === cogId);
+  const know = KNOW.find(k => k.id === knowId);
+  const data = CELLS[key] || { competency: null, verbs: [], objectives: [], strategies: [] };
+  cellEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  cellEl.classList.add('guide-highlight');
+  setTimeout(() => cellEl.classList.remove('guide-highlight'), 1800);
+  openPanel(cellEl, cog, know, data);
+}
+
+// Show guide on first load
+// Show guide on load
+showGuide();
+
+// ═══════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════
+
+const grid = document.getElementById('main-grid');
+
+function el(tag, cls, html) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (html !== undefined) e.innerHTML = html;
+  return e;
+}
+
+/* Row 0 — SRGD title bar: KD corner label + SRGD spanning title */
+grid.appendChild(el('div', 'kd-corner', ''));
+const srgdBar = document.createElement('div');
+srgdBar.className = 'srgd-bar';
+srgdBar.style.gridColumn = '2 / 8';
+srgdBar.innerHTML = `
+  <span class="srgd-bar-pole">&#8592; Individual</span>
+  <span class="srgd-bar-name">Self-Relational Growth Dimension</span>
+  <span class="srgd-bar-pole">Community &#8594;</span>
+`;
+grid.appendChild(srgdBar);
+
+/* Row 1 — Social competency cells */
+grid.appendChild(el('div', 'corner kd-domain-title', `
+  <div class="kd-domain-text">The Knowledge<br>Domain</div>
+  <div class="kd-scale-abstract">&#8595; Abstract</div>
+`));
+COG.forEach(c => {
+  grid.appendChild(el('div', 'social-cell', `
+    <div class="s-name">${c.socialLabel}</div>
+    <div class="s-desc">${c.socialDesc}</div>
+  `));
+});
+
+/* Rows 1–4 — Knowledge rows (top=Metacognitive, bottom=Factual) */
+KNOW.forEach(kt => {
+  /* left label */
+  grid.appendChild(el('div', `know-label ${kt.labelClass}`, `
+    <span class="k-icon" aria-hidden="true">${KNOW_ICONS[kt.id]}</span>
+    <div class="k-name">${kt.label}</div>
+    <div class="k-desc">${kt.desc}</div>
+  `));
+
+  /* 6 cells */
+  COG.forEach(cog => {
+    const key  = `${cog.id}-${kt.id}`;
+    const data = CELLS[key] || { competency: null, verbs: [], objectives: [], strategies: [] };
+    const hasContent = data.verbs.length > 0;
+
+    const faceVerbs = data.verbs.slice(0, 3).map(v => `<span class="cv">${v}</span>`).join('');
+    const cellEl = el('div', `cell ${kt.cellClass} ${hasContent ? '' : 'no-content'}`, `
+      <div class="c-comp">${data.competency || ''}</div>
+      <div class="c-verbs">${faceVerbs}</div>
+    `);
+    cellEl.dataset.key = key;
+    cellEl.addEventListener('click', () => openPanel(cellEl, cog, kt, data));
+    grid.appendChild(cellEl);
+  });
+});
+
+/* Row 5 — Cognitive Process bottom labels */
+grid.appendChild(el('div', 'cog-spacer kd-concrete', '&#8593; Concrete'));
+COG.forEach(c => {
+  grid.appendChild(el('div', 'cog-label', `
+    <div class="c-name">${c.label}</div>
+    <div class="c-desc">${c.desc}</div>
+  `));
+});
+
+// ═══════════════════════════════════════════
+//  PANEL
+// ═══════════════════════════════════════════
+
+let activeCell = null;
+
+function openPanel(cellEl, cog, kt, data) {
+  if (activeCell) activeCell.classList.remove('active');
+  activeCell = cellEl;
+  cellEl.classList.add('active');
+
+  const hasVerbs = data.verbs.length > 0;
+  const hasObjs  = data.objectives.length > 0;
+  const hasStrat = data.strategies.length > 0;
+
+  document.getElementById('panel-inner').innerHTML = `
+    <div class="ph">
+      <button class="ph-close" onclick="closePanel()">&#10005;</button>
+      <div class="ph-meta">${cog.label} &times; ${kt.label}</div>
+      <div class="ph-title">${cog.label} &amp; ${kt.label} Knowledge</div>
+      ${data.competency ? `<div class="ph-badge">${data.competency}</div>` : ''}
+      <div class="ph-sd"><strong>Self-Relational Growth &mdash; ${cog.socialLabel}:</strong> ${cog.socialDesc}</div>
+    </div>
+
+    <div class="ps">
+      <h4>Action Verbs</h4>
+      ${hasVerbs
+        ? `<div class="verb-chips">${data.verbs.map(v => `<span class="verb-chip">${v}</span>`).join('')}</div>`
+        : '<div class="pending">Verbs coming soon</div>'}
+    </div>
+
+    <div class="ps">
+      <h4>Example Objectives</h4>
+      ${hasObjs
+        ? data.objectives.map(o => `<div class="ex-item">${o}</div>`).join('')
+        : '<div class="pending">Example objectives coming soon</div>'}
+    </div>
+
+    <div class="ps">
+      <h4>Learning Strategies</h4>
+      ${hasStrat
+        ? data.strategies.map(s => `<div class="st-item">${s}</div>`).join('')
+        : '<div class="pending">Learning strategies coming soon</div>'}
+    </div>
+
+    <div class="ps">
+      <h4>Knowledge Checks &amp; Assessments</h4>
+      <div class="pending">Linked question types &amp; assessment templates coming soon</div>
+    </div>
+
+    <div class="ps">
+      <h4>Performance Measures &amp; OKRs</h4>
+      <div class="pending">Performance measures &amp; OKR links coming soon</div>
+    </div>
+  `;
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  if (activeCell) { activeCell.classList.remove('active'); activeCell = null; }
+}
+</script>
+</body>
+</html>

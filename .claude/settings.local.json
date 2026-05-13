@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where node *)",
+      "Bash(node -e ' *)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\mchia\\\\perf-based-objectives\\\\\" -Force | ForEach-Object { \"$\\($_.Name\\) [$\\($_.Length\\)]\" })"
+    ]
+  }
+}
